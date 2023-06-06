@@ -75,16 +75,17 @@ func FromDecimal(b10 int) (string, error) {
 		b10 *= -1
 	}
 
-	b16Length := Base16Length(b10)
-	exponent := b16Length - 1
+	exponent := Base16Length(b10) - 1
 
-	for i := 0; i < b16Length; i++ {
-		positionalValueB10 := pow(16, exponent)
-		digitValueB10 := b10 / positionalValueB10
-		b10 %= positionalValueB10
-
-		b16.WriteRune(toB16[digitValueB10])
-		exponent--
+	// A b16 number can be represented by the following b10 sum
+	// where 'x' is the b10 value of the b16 digit (1 thru F) at that position
+	// in the b16 string.
+	// (16**exponent)*x_1 + (16**(exponent-1))*x_2 + ... + (16**0)*x_3
+	for ; exponent >= 0; exponent-- {
+		c := pow(16, exponent)
+		x := b10 / c
+		b10 %= c
+		b16.WriteRune(toB16[x])
 	}
 
 	return b16.String(), nil
